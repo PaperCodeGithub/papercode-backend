@@ -18,8 +18,20 @@ const pool = new Pool({
 
 app.get('/api/projects', async (req, res) => {
     try{
-        const result = await pool.query("SELECT * FROM projects WHERE type = 'project' ORDER BY created_at DESC");
-        res.json(result.rows);
+        const page = parseInt(req.query.page) || 1;
+        const limit = 6;
+        const offset = (page - 1) * limit;
+
+        const result = await pool.query("SELECT * FROM projects WHERE type = 'project' ORDER BY created_at DESC LIMIT $1 OFFSET $2", [limit, offset]);
+        
+        const totalCount = await pool.query('SELECT COUNT(*) FROM projects');
+        const totalPages = Math.ceil(parseInt(totalCount.rows[0].count) / limit);
+
+        res.json({
+            projects: projects.rows,
+            totalPages: totalPages,
+            currentPage: page
+        });
 
     }catch (err){
         console.error(err.message);
@@ -40,8 +52,26 @@ app.get('/api/projects/category/:cat', async (req, res) => {
 
 app.get('/api/products', async (req, res) =>{
     try{
-        const result = await pool.query("SELECT * FROM products ORDER BY created_at DESC");
-        res.json(result.rows);
+        const page = parseInt(req.query.page) || 1;
+        const limit = 4;
+        const offset = (page - 1) * limit;
+        
+        const productsQuery = await pool.query(
+            "SELECT * FROM products ORDER BY created_at DESC LIMIT $1 OFFSET $2",
+            [limit, offset]
+        );
+
+        const countQuery = await pool.query("SELECT COUNT(*) FROM products");
+        const totalCount = parseInt(countQuery.rows[0].count);
+        const totalPages = Math.ceil(totalCount / limit);
+
+        res.json({
+            products: productsQuery.rows,
+            totalPages: totalPages,
+            currentPage: page,
+            totalItems: totalCount
+        });
+        
     } catch (err) {
         console.error(err.message);
         res.status(500).send('Server Error');
