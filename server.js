@@ -40,23 +40,25 @@ app.get('/api/projects', async (req, res) => {
 });
 
 app.get('/api/experiments', async (req, res) => {
-    try{
+    try {
         const page = parseInt(req.query.page) || 1;
         const limit = 6;
         const offset = (page - 1) * limit;
 
-        const result = await pool.query("SELECT * FROM projects WHERE type = 'experiment' ORDER BY created_at DESC LIMIT $1 OFFSET $2", [limit, offset]);
+        const result = await pool.query(
+            "SELECT * FROM projects WHERE type = 'experiment' ORDER BY created_at DESC LIMIT $1 OFFSET $2", 
+            [limit, offset]
+        );
         
-        const totalCount = await pool.query('SELECT COUNT(*) FROM projects');
-        const totalPages = Math.ceil(parseInt(totalCount.rows[0].count) / limit);
+        const countRes = await pool.query("SELECT COUNT(*) FROM projects WHERE type = 'experiment'");
+        const totalPages = Math.ceil(parseInt(countRes.rows[0].count) / limit);
 
         res.json({
             projects: result.rows,
             totalPages: totalPages,
             currentPage: page
         });
-
-    }catch (err){
+    } catch (err) {
         console.error(err.message);
         res.status(500).send('Server Error');
     }
