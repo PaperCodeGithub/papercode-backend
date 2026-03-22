@@ -28,7 +28,7 @@ app.get('/api/projects', async (req, res) => {
         const totalPages = Math.ceil(parseInt(totalCount.rows[0].count) / limit);
 
         res.json({
-            projects: projects.rows,
+            projects: result.rows,
             totalPages: totalPages,
             currentPage: page
         });
@@ -71,7 +71,7 @@ app.get('/api/products', async (req, res) =>{
             currentPage: page,
             totalItems: totalCount
         });
-        
+
     } catch (err) {
         console.error(err.message);
         res.status(500).send('Server Error');
